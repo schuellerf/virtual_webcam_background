@@ -18,4 +18,8 @@ class Roll:
                        axis=(1, 0))
 
 
-filters.register_filter("roll", Roll)
+filters.register_filter("roll", Roll,
+                        [
+                            ["speed_x", "numeric", -100, 100],
+                            ["speed_y", "numeric", -100, 100]
+                        ])

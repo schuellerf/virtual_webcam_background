@@ -24,4 +24,8 @@ class GaussianBlur:
         return frame
 
 
-filters.register_filter("gaussian_blur", GaussianBlur)
+filters.register_filter("gaussian_blur", GaussianBlur,
+                        [
+                            ["intensity_x", "numeric", 0, 100],
+                            ["intensity_y", "numeric", 0, 100]
+                        ])
