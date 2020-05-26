@@ -20,4 +20,8 @@ class Blur:
         return frame
 
 
-filters.register_filter("blur", Blur)
+filters.register_filter("blur", Blur,
+                        [
+                            ["intensity_x", "numeric", 0, 100],
+                            ["intensity_y", "numeric", 0, 100]
+                        ])

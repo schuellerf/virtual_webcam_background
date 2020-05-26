@@ -45,6 +45,21 @@ class ColorFilter:
         return frame
 
 
-filters.register_filter("solid_color", SolidColor)
-filters.register_filter("colorize", Colorize)
-filters.register_filter("color_filter", ColorFilter)
+filters.register_filter("solid_color", SolidColor,
+                        [
+                            ["R", "numeric", 0, 255],
+                            ["G", "numeric", 0, 255],
+                            ["B", "numeric", 0, 255]
+                        ])
+filters.register_filter("colorize", Colorize,
+                        [
+                            ["R", "numeric", 0, 255],
+                            ["G", "numeric", 0, 255],
+                            ["B", "numeric", 0, 255]
+                        ])
+filters.register_filter("color_filter", ColorFilter,
+                        [
+                            ["R", "numeric", 0, 255],
+                            ["G", "numeric", 0, 255],
+                            ["B", "numeric", 0, 255]
+                        ])

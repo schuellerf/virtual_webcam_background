@@ -26,8 +26,12 @@ class Window(QWidget):
         
         # Tree actions
         add_layer_btn = QPushButton("Add Layer")
+        add_layer_btn.clicked.connect(self.add_layer)
         add_filter_btn = QPushButton("Add Filter")
+        add_filter_btn.clicked.connect(self.add_filter)
         remove_btn = QPushButton("Remove")
+        remove_btn.clicked.connect(self.remove_selection)
+
         tree_action_layout = QHBoxLayout()
         tree_action_layout.addWidget(add_layer_btn)
         tree_action_layout.addWidget(add_filter_btn)
@@ -108,7 +112,7 @@ class Window(QWidget):
                     if len(data[1]) > i + 1:
                         slider.setValue(data[1][i + 1])
                     
-                    slider.valueChanged.connect(lambda value: self.update_filter_prop(data[1], i + 1, value))
+                    slider.valueChanged.connect(lambda value,i=i: self.update_filter_prop(data[1], i + 1, value))
                     self.properties_layout.addWidget(slider)
                 else:
                     self.properties_layout.addWidget(QLabel("Unsupported type: %s" % prop[1]))
@@ -124,13 +128,17 @@ class Window(QWidget):
             self.properties_layout.addWidget(types)
             self.properties_layout.addStretch(1)
     
-    def rebuild_tree(self):
+    def get_selection_index(self):
         curr_index = self.tree.currentIndex()
         layer_index = curr_index.parent().row()
         filter_index = curr_index.row()
         if layer_index == -1:
             layer_index = filter_index
             filter_index = -1
+        return (layer_index, filter_index)
+
+    def rebuild_tree(self):
+        layer_index, filter_index = self.get_selection_index()
 
         self.model.clear()
         self.model.setHorizontalHeaderLabels(['Layer'])
@@ -147,16 +155,47 @@ class Window(QWidget):
             self.model.appendRow([layer_item])
         self.tree.expandAll()
 
-        print(layer_index, filter_index)
+        # Handle deletions
+        if layer_index == -1:
+            pass
+        elif self.model.rowCount() <= layer_index:
+            layer_index = self.model.rowCount() - 1
+            filter_index = -1
+        elif self.model.rowCount(self.model.item(layer_index).index()) <= filter_index:
+            filter_index = self.model.rowCount(self.model.item(layer_index).index()) - 1
+
+        # Reselect
         if filter_index != -1:
             self.tree.setCurrentIndex(self.model.item(layer_index).child(filter_index).index())
         elif layer_index != -1:
             self.tree.setCurrentIndex(self.model.item(layer_index).index())
-        else:
+        elif self.model.rowCount() != 0:
             self.tree.setCurrentIndex(self.model.item(0).index())
-        self.construct_properties_layout(self.model.itemFromIndex(self.tree.currentIndex()).data())
+
+        if self.tree.currentIndex().isValid():
+            self.construct_properties_layout(self.model.itemFromIndex(self.tree.currentIndex()).data())
         # DEBUG
         self.activate_changes()
+
+    def add_layer(self):
+        layer_index, filter_index = self.get_selection_index()
+        virtual_webcam.config.get("layers", []).insert(layer_index + 1, {"input": []})
+        self.rebuild_tree()
+
+    def add_filter(self):
+        layer_index, filter_index = self.get_selection_index()
+        data = self.model.item(layer_index).data()
+        data = next(x for x in virtual_webcam.config.get("layers", []) if x == data)
+        data[list(data.keys())[0]].insert(filter_index + 1, ["blur", 5, 5])
+        self.rebuild_tree()
+
+    def remove_selection(self):
+        data = self.model.itemFromIndex(self.tree.currentIndex()).data()
+        if isinstance(data, tuple):
+            data[0][list(data[0].keys())[0]].remove(data[1])
+        else:
+            virtual_webcam.config.get("layers", []).remove(data)
+        self.rebuild_tree()
 
     def update_layer_type(self, layer_filters, new_layer_type):
         # FIXME: Absolutely ugly!

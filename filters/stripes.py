@@ -20,4 +20,9 @@ class Stripes:
         return np.clip(frame, 0.0, 255.0)
 
 
-filters.register_filter("stripes", Stripes)
+filters.register_filter("stripes", Stripes,
+                        [
+                            ["width", "numeric", 1, 100],
+                            ["intensity", "numeric", 1, 255],
+                            ["speed", "numeric", -20, 20]
+                        ])
