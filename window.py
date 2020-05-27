@@ -1,10 +1,11 @@
+import signal
 import sys
 import glob
 import yaml
 
-from PyQt5.QtWidgets import QAbstractItemView, QApplication, QFileDialog, QFormLayout, QCheckBox, QComboBox, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QDesktopWidget, QPushButton, QSlider, QTreeView, QWidget
-from PyQt5.QtGui import QStandardItem, QStandardItemModel
-from PyQt5.QtCore import Qt, QThread
+from PyQt5.QtWidgets import QAbstractItemView, QApplication, QFileDialog, QFormLayout, QCheckBox, QComboBox, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QMenu, QDesktopWidget, QPushButton, QSystemTrayIcon, QSlider, QTreeView, QWidget
+from PyQt5.QtGui import QStandardItem, QStandardItemModel, QIcon
+from PyQt5.QtCore import Qt, QThread, QTimer
 from gui.QFloatSlider import QFloatSlider
 
 import virtual_webcam
@@ -12,22 +13,23 @@ import filters
 
 
 class Window(QWidget):
-    def __init__(self):
+    def __init__(self, processing_thread):
         super().__init__()
         self.initUI()
+        self.processing_thread = processing_thread
         
     def initUI(self):
         self.resize(640, 480)
         self.center()
 
-        # Tree
+        # Tree view of layers and filters
         self.tree = QTreeView()
         self.model = QStandardItemModel()
         self.tree.header().setDefaultSectionSize(180)
         self.tree.setModel(self.model)
         self.tree.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tree.setItemsExpandable(False)
-        self.tree.clicked.connect(self.item_click)
+        self.tree.activated.connect(self.item_click)
         
         # Tree actions
         add_layer_btn = QPushButton("Add Layer")
@@ -36,11 +38,14 @@ class Window(QWidget):
         add_filter_btn.clicked.connect(self.add_filter)
         remove_btn = QPushButton("Remove")
         remove_btn.clicked.connect(self.remove_selection)
+        play_btn = QPushButton("⏸︎")
+        play_btn.clicked.connect(self.toggle_play)
 
         tree_action_layout = QHBoxLayout()
         tree_action_layout.addWidget(add_layer_btn)
         tree_action_layout.addWidget(add_filter_btn)
         tree_action_layout.addWidget(remove_btn)
+        tree_action_layout.addWidget(play_btn)
         tree_action_layout.addStretch(1)
 
         # Tree layout
@@ -75,7 +80,6 @@ class Window(QWidget):
         layout.addLayout(action_button_layout)
                 
         self.setWindowTitle("Virtual Webcam Background")
-        self.show()
 
     def center(self):
         frame = self.frameGeometry()
@@ -91,12 +95,19 @@ class Window(QWidget):
         with open('config.yaml', 'w') as config_file:
             yaml.dump(virtual_webcam.config, config_file)
 
+    def toggle_play(self):
+        if self.processing_thread.paused:
+            self.processing_thread.paused = False
+            self.sender().setText("⏸︎")
+        else:
+            self.processing_thread.paused = True
+            self.sender().setText("⏵︎")
+
     def item_click(self, signal):
         item = self.model.itemFromIndex(signal)
         self.construct_properties_layout(item.data())
     
-    def construct_properties_layout(self, data = None):
-        print("construct_properties", data)
+    def construct_properties_layout(self, data):
         for i in reversed(range(self.properties_layout.count())): 
             child = self.properties_layout.takeAt(i)
             if child.widget() is not None:
@@ -306,18 +317,51 @@ class Window(QWidget):
         virtual_webcam.layers = virtual_webcam.reload_layers(virtual_webcam.config)
 
 class ProcessThread(QThread):
+    def __init__(self):
+        super().__init__()
+        self.running = True
+        self.paused = False
+
     def run(self):
-        while True:
-            virtual_webcam.mainloop()
+        while self.running:
+            if not self.paused:
+                virtual_webcam.mainloop()
+            else:
+                # Avoid slowing down the UI with a spin loop
+                self.sleep(1)
+
+def exit(app, processing_thread):
+    processing_thread.running = False
+    app.quit()
 
 def main():
     app = QApplication(sys.argv)
-    window = Window()
-    
+
     # Spin up processing thread
     thread = ProcessThread()
     thread.finished.connect(app.exit)
     thread.start()
+
+    # Ugly hack to get nice termination behaviour :-/
+    signal.signal(signal.SIGINT, lambda *a: exit(app, thread))
+    timer = QTimer()
+    timer.start(200)
+    timer.timeout.connect(lambda: None)
+
+    window = Window(thread)
+    window.show()
+
+    tray_icon = QSystemTrayIcon(QIcon("icon.ico"), app)
+    tray_icon_menu = QMenu()
+    config = tray_icon_menu.addAction('Configure')
+    config.triggered.connect(window.show)
+    quit = tray_icon_menu.addAction('Quit')
+    quit.triggered.connect(app.exit)
+    tray_icon.setContextMenu(tray_icon_menu)
+    tray_icon.activated.connect(window.show)
+    tray_icon.setToolTip("Virtual Webcam Background")
+    tray_icon.show()
+    tray_icon.showMessage("Virtual Webcam Bacgkround running", "... in the background ;-)")
     
     sys.exit(app.exec_())
 
