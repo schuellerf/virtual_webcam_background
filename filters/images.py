@@ -99,5 +99,14 @@ class ImageSequence:
         return frame
 
 
-filters.register_filter("image", Image)
-filters.register_filter("image_sequence", ImageSequence)
+filters.register_filter("image", Image,
+                        [
+                            ["Image Path", "file"],
+                            ["Interpolation Method", "enum", ["LINEAR", "NEAREST"]]
+                        ])
+filters.register_filter("image_sequence", ImageSequence,
+                        [
+                            ["Image Path", "file"],
+                            ["FPS", "numeric", 1, 144],
+                            ["Interpolation Method", "enum", ["LINEAR", "NEAREST"]]
+                        ])

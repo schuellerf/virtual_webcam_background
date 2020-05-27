@@ -1,10 +1,12 @@
 import sys
-from PyQt5.QtWidgets import QAbstractItemView, QApplication, QFormLayout, QComboBox, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QDesktopWidget, QPushButton, QSlider, QTreeView, QWidget
+from PyQt5.QtWidgets import QAbstractItemView, QApplication, QFileDialog, QFormLayout, QCheckBox, QComboBox, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QDesktopWidget, QPushButton, QSlider, QTreeView, QWidget
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtCore import Qt, QThread
+from gui.QFloatSlider import QFloatSlider
 
 import virtual_webcam
 import filters
+
 
 class Window(QWidget):
     def __init__(self):
@@ -78,7 +80,6 @@ class Window(QWidget):
     
     def item_click(self, signal):
         item = self.model.itemFromIndex(signal)
-        print(item, item.data())
         self.construct_properties_layout(item.data())
     
     def construct_properties_layout(self, data = None):
@@ -89,31 +90,56 @@ class Window(QWidget):
                 child.widget().deleteLater()
         
         # Determine if it's a layer or filters
-        if isinstance(data, tuple):
+        if data[0] == 'filter':
             self.properties_layout.addWidget(QLabel("Filter type"))
-            filter_type = data[1][0]
+            filter_type = data[2][0]
             
             types = QComboBox()
-            filter_types = list(filters.filters.keys())
+            filter_types = sorted(list(filters.filters.keys()))
             types.addItems(filter_types)
             types.setCurrentIndex(filter_types.index(filter_type))
-            types.currentIndexChanged.connect(lambda x: self.update_filter_type(data[1], types.itemText(x)))
+            types.currentIndexChanged.connect(lambda x: self.update_filter_type(data[2], types.itemText(x)))
             self.properties_layout.addWidget(types)
             
             # Dynamic properties
             for i, prop in enumerate(filters.get_filter_properties(filter_type)):
                 self.properties_layout.addWidget(QLabel(prop[0]))
-                if prop[1] == 'numeric':
-                    slider = QSlider(Qt.Horizontal)
-                    slider.setTickInterval(10)
-                    slider.setSingleStep(1)
+                if prop[1] in ['numeric', 'double']:
+                    if prop[1] == 'numeric':
+                        slider = QSlider(Qt.Horizontal)
+                        slider.setTickInterval(10)
+                        slider.setTickPosition(QSlider.TicksBelow)
+                    else:
+                        slider = QFloatSlider(Qt.Horizontal)
+                    slider.setSingleStep(prop[4] if len(prop) > 4 else 1)
                     slider.setMinimum(prop[2])
                     slider.setMaximum(prop[3])
-                    if len(data[1]) > i + 1:
-                        slider.setValue(data[1][i + 1])
+                    if len(data[2]) > i + 1:
+                        slider.setValue(data[2][i + 1])
                     
-                    slider.valueChanged.connect(lambda value,i=i: self.update_filter_prop(data[1], i + 1, value))
+                    slider.valueChanged.connect(lambda value,i=i,slider=slider: self.update_filter_prop(data[2], i + 1, slider.value()))
                     self.properties_layout.addWidget(slider)
+                elif prop[1] == 'boolean':
+                    checkbox = QCheckBox()
+                    if len(data[2]) > i + 1:
+                        checkbox.setCheckState(Qt.Checked if data[2][i + 1] else Qt.Unchecked)
+                    checkbox.stateChanged.connect(lambda value,i=i: self.update_filter_prop(data[2], i + 1, value))
+                    self.properties_layout.addWidget(checkbox)
+                elif prop[1] == 'enum':
+                    dropdown = QComboBox()
+                    dropdown.addItems(prop[2])
+                    if len(data[2]) > i + 1:
+                        dropdown.setCurrentIndex(prop[2].index(data[2][i+ 1]))
+                    dropdown.currentIndexChanged.connect(lambda value,i=i: self.update_filter_prop(data[2], i + 1, self.sender().itemText(value)))
+                    self.properties_layout.addWidget(dropdown)
+                elif prop[1] == 'file':
+                    file_label = QLabel("File: %s" % data[2][i + 1])
+                    self.properties_layout.addWidget(file_label)
+                    file_selection_btn = QPushButton("Select file")
+                    file_selection_btn.clicked.connect(lambda i=i: self.select_file_property(data, i + 1, file_label))
+                    self.properties_layout.addWidget(file_selection_btn)
+                elif prop[1] == 'constant':
+                    self.properties_layout.addWidget(QLabel("Constant: %s" % prop[2]))
                 else:
                     self.properties_layout.addWidget(QLabel("Unsupported type: %s" % prop[1]))
                 
@@ -123,11 +149,16 @@ class Window(QWidget):
             types = QComboBox()
             layer_types = ["input", "foreground", "previous", "empty"];
             types.addItems(layer_types)
-            types.setCurrentIndex(layer_types.index(list(data.keys())[0]))
-            types.currentIndexChanged.connect(lambda x: self.update_layer_type(data, types.itemText(x)))
+            types.setCurrentIndex(layer_types.index(list(data[1].keys())[0]))
+            types.currentIndexChanged.connect(lambda x: self.update_layer_type(data[1], types.itemText(x)))
             self.properties_layout.addWidget(types)
             self.properties_layout.addStretch(1)
     
+    def select_file_property(self, data, i, file_label):
+      file_name, _ = QFileDialog.getOpenFileName(self, 'Open file', '', 'Image files (*.jpg *.gif *.png)')
+      file_label.setText("File: %s" % file_name)
+      self.update_filter_prop(data[2], i, file_name)
+
     def get_selection_index(self):
         curr_index = self.tree.currentIndex()
         layer_index = curr_index.parent().row()
@@ -144,13 +175,11 @@ class Window(QWidget):
         self.model.setHorizontalHeaderLabels(['Layer'])
         for layer_filters in virtual_webcam.config.get("layers", []):
             layer_type = list(layer_filters.keys())[0]
-
             layer_item = QStandardItem(layer_type)
-            layer_item.setData(layer_filters)
-
+            layer_item.setData(("layer", layer_filters))
             for layer_filter in layer_filters[layer_type]:
                 layer_filter_item = QStandardItem(layer_filter[0])
-                layer_filter_item.setData((layer_filters, layer_filter))
+                layer_filter_item.setData(("filter", layer_filters, layer_filter))
                 layer_item.appendRow(layer_filter_item)
             self.model.appendRow([layer_item])
         self.tree.expandAll()
@@ -184,23 +213,25 @@ class Window(QWidget):
 
     def add_filter(self):
         layer_index, filter_index = self.get_selection_index()
-        data = self.model.item(layer_index).data()
-        data = next(x for x in virtual_webcam.config.get("layers", []) if x == data)
+        if layer_index == -1:
+            return
+        _, data = self.model.item(layer_index).data()
         data[list(data.keys())[0]].insert(filter_index + 1, ["blur", 5, 5])
         self.rebuild_tree()
 
     def remove_selection(self):
-        data = self.model.itemFromIndex(self.tree.currentIndex()).data()
-        if isinstance(data, tuple):
-            data[0][list(data[0].keys())[0]].remove(data[1])
+        curr_index = self.tree.currentIndex()
+        if not curr_index.isValid():
+            return
+
+        data = self.model.itemFromIndex(curr_index).data()
+        if data[0] == 'filter':
+            data[1][list(data[1].keys())[0]].remove(data[2])
         else:
-            virtual_webcam.config.get("layers", []).remove(data)
+            virtual_webcam.config.get("layers", []).remove(data[1])
         self.rebuild_tree()
 
     def update_layer_type(self, layer_filters, new_layer_type):
-        # FIXME: Absolutely ugly!
-        layer_filters = next(x for x in virtual_webcam.config.get("layers", []) if x == layer_filters)
-
         layer_type = list(layer_filters.keys())[0]
         filters = layer_filters[layer_type]
         layer_filters[new_layer_type] = filters
@@ -209,6 +240,22 @@ class Window(QWidget):
     
     def update_filter_type(self, layer_filter, new_filter_type):
         layer_filter[0] = new_filter_type
+        while len(layer_filter) != 1:
+            layer_filter.pop()
+        for prop in filters.get_filter_properties(new_filter_type):
+            if prop[1] in ['numeric', 'double']:
+                layer_filter.append(prop[2]) # Min value
+            elif prop[1] == 'boolean':
+                layer_filter.append(False)
+            elif prop[1] == 'constant':
+                layer_filter.append(prop[2])
+            elif prop[1] == 'enum':
+                layer_filter.append(prop[2][0])
+            elif prop[1] == 'file':
+                layer_filter.append('images/fog.png')
+            else:
+                layer_filter.append(None)
+
         self.rebuild_tree()
     
     def update_filter_prop(self, layer_filter, index, new_value):

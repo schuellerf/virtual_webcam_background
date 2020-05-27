@@ -117,7 +117,16 @@ class Affine:
         return frame
 
 
-filters.register_filter("flip", Flip)
-filters.register_filter("zoom", Zoom)
+filters.register_filter("flip", Flip,
+                        [
+                            ["Horizontal", "boolean"],
+                            ["Vertical", "boolean"]
+                        ])
+filters.register_filter("zoom", Zoom,
+                        [
+                            ["Horizontal", "double", 0.1, 3.0, 0.1],
+                            ["Vertical", "double", 0.1, 3.0, 0.1],
+                            ["Pad and Crop", "constant", True]
+                        ])
 filters.register_filter("move", Move)
 filters.register_filter("affine", Affine)
