@@ -17,7 +17,7 @@ class Window(QWidget):
         super().__init__()
         self.initUI()
         self.processing_thread = processing_thread
-        
+
     def initUI(self):
         self.resize(640, 480)
         self.center()
@@ -78,8 +78,13 @@ class Window(QWidget):
         layout = QVBoxLayout(self)
         layout.addLayout(main_layout)
         layout.addLayout(action_button_layout)
-                
+
+        self.setWindowIcon(QIcon("icon.ico"))
         self.setWindowTitle("Virtual Webcam Background")
+
+    def closeEvent(self, event):
+        self.hide()
+        event.ignore()
 
     def center(self):
         frame = self.frameGeometry()
@@ -330,6 +335,12 @@ class ProcessThread(QThread):
                 # Avoid slowing down the UI with a spin loop
                 self.sleep(1)
 
+def toggle_window(window):
+    if window.isVisible():
+        window.hide()
+    else:
+        window.showNormal()
+
 def exit(app, processing_thread):
     processing_thread.running = False
     app.quit()
@@ -354,11 +365,11 @@ def main():
     tray_icon = QSystemTrayIcon(QIcon("icon.ico"), app)
     tray_icon_menu = QMenu()
     config = tray_icon_menu.addAction('Configure')
-    config.triggered.connect(window.show)
+    config.triggered.connect(window.showNormal)
     quit = tray_icon_menu.addAction('Quit')
     quit.triggered.connect(app.exit)
     tray_icon.setContextMenu(tray_icon_menu)
-    tray_icon.activated.connect(window.show)
+    tray_icon.activated.connect(lambda: toggle_window(window))
     tray_icon.setToolTip("Virtual Webcam Background")
     tray_icon.show()
     tray_icon.showMessage("Virtual Webcam Bacgkround running", "... in the background ;-)")
