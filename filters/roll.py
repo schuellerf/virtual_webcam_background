@@ -20,6 +20,6 @@ class Roll:
 
 filters.register_filter("roll", Roll,
                         [
-                            ["speed_x", "numeric", -100, 100],
-                            ["speed_y", "numeric", -100, 100]
+                            ["speed_x", "numeric", -100, 100, 1, 0],
+                            ["speed_y", "numeric", -100, 100, 1, 0]
                         ])

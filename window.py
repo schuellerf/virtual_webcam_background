@@ -1,4 +1,7 @@
 import sys
+import glob
+import yaml
+
 from PyQt5.QtWidgets import QAbstractItemView, QApplication, QFileDialog, QFormLayout, QCheckBox, QComboBox, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QDesktopWidget, QPushButton, QSlider, QTreeView, QWidget
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtCore import Qt, QThread
@@ -53,7 +56,9 @@ class Window(QWidget):
         
         # Action buttons
         load_btn = QPushButton("Reload config")
+        load_btn.clicked.connect(self.reload_config)
         save_btn = QPushButton("Save config")
+        save_btn.clicked.connect(self.save_config)
         
         # Layout:
         # tree | properties
@@ -78,6 +83,14 @@ class Window(QWidget):
         frame.moveCenter(center_point)
         self.move(frame.topLeft())
     
+    def reload_config(self):
+        virtual_webcam.config, virtual_webcam.config_mtime = virtual_webcam.load_config(0)
+        self.rebuild_tree()
+
+    def save_config(self):
+        with open('config.yaml', 'w') as config_file:
+            yaml.dump(virtual_webcam.config, config_file)
+
     def item_click(self, signal):
         item = self.model.itemFromIndex(signal)
         self.construct_properties_layout(item.data())
@@ -136,8 +149,22 @@ class Window(QWidget):
                     file_label = QLabel("File: %s" % data[2][i + 1])
                     self.properties_layout.addWidget(file_label)
                     file_selection_btn = QPushButton("Select file")
-                    file_selection_btn.clicked.connect(lambda i=i: self.select_file_property(data, i + 1, file_label))
+                    file_selection_btn.clicked.connect(lambda i=i,types=prop[2]: self.select_file_property(types, data, i + 1, file_label))
                     self.properties_layout.addWidget(file_selection_btn)
+                elif prop[1] == 'dir':
+                    dir_label = QLabel("Dir: %s" % data[2][i + 1])
+                    self.properties_layout.addWidget(dir_label)
+                    dir_selection_btn = QPushButton("Select directory")
+                    dir_selection_btn.clicked.connect(lambda i=i: self.select_dir_property(data, i + 1, dir_label))
+                    self.properties_layout.addWidget(dir_selection_btn)
+                elif prop[1] == 'device':
+                    dropdown = QComboBox()
+                    cameras = glob.glob("/dev/video*")
+                    dropdown.addItems(cameras)
+                    if len(data[2]) > i + 1:
+                        dropdown.setCurrentIndex(cameras.index(data[2][i+ 1]))
+                    dropdown.currentIndexChanged.connect(lambda value,i=i: self.update_filter_prop(data[2], i + 1, self.sender().itemText(value)))
+                    self.properties_layout.addWidget(dropdown)
                 elif prop[1] == 'constant':
                     self.properties_layout.addWidget(QLabel("Constant: %s" % prop[2]))
                 else:
@@ -154,10 +181,17 @@ class Window(QWidget):
             self.properties_layout.addWidget(types)
             self.properties_layout.addStretch(1)
     
-    def select_file_property(self, data, i, file_label):
-      file_name, _ = QFileDialog.getOpenFileName(self, 'Open file', '', 'Image files (*.jpg *.gif *.png)')
-      file_label.setText("File: %s" % file_name)
-      self.update_filter_prop(data[2], i, file_name)
+    def select_file_property(self, types, data, i, file_label):
+        file_name, _ = QFileDialog.getOpenFileName(self, 'Open file', '', types)
+        if file_name:
+            file_label.setText("File: %s" % file_name)
+            self.update_filter_prop(data[2], i, file_name)
+
+    def select_dir_property(self, data, i, dir_label):
+        dir_name = QFileDialog.getExistingDirectory(self, 'Open directory', '', QFileDialog.ShowDirsOnly)
+        if dir_name:
+            dir_label.setText("Dir: %s" % dir_name)
+            self.update_filter_prop(data[2], i, dir_name)
 
     def get_selection_index(self):
         curr_index = self.tree.currentIndex()
@@ -168,9 +202,8 @@ class Window(QWidget):
             filter_index = -1
         return (layer_index, filter_index)
 
-    def rebuild_tree(self):
-        layer_index, filter_index = self.get_selection_index()
-
+    def rebuild_tree(self, index = None):
+        layer_index, filter_index = index if index != None else self.get_selection_index()
         self.model.clear()
         self.model.setHorizontalHeaderLabels(['Layer'])
         for layer_filters in virtual_webcam.config.get("layers", []):
@@ -209,15 +242,15 @@ class Window(QWidget):
     def add_layer(self):
         layer_index, filter_index = self.get_selection_index()
         virtual_webcam.config.get("layers", []).insert(layer_index + 1, {"input": []})
-        self.rebuild_tree()
+        self.rebuild_tree((layer_index + 1, -1))
 
     def add_filter(self):
         layer_index, filter_index = self.get_selection_index()
         if layer_index == -1:
             return
         _, data = self.model.item(layer_index).data()
-        data[list(data.keys())[0]].insert(filter_index + 1, ["blur", 5, 5])
-        self.rebuild_tree()
+        data[list(data.keys())[0]].insert(filter_index + 1, ["gaussian_blur", 10, 10])
+        self.rebuild_tree((layer_index, filter_index + 1))
 
     def remove_selection(self):
         curr_index = self.tree.currentIndex()
@@ -244,7 +277,7 @@ class Window(QWidget):
             layer_filter.pop()
         for prop in filters.get_filter_properties(new_filter_type):
             if prop[1] in ['numeric', 'double']:
-                layer_filter.append(prop[2]) # Min value
+                layer_filter.append(prop[5] if len(prop) > 5 else prop[2]) # Default value, else min value
             elif prop[1] == 'boolean':
                 layer_filter.append(False)
             elif prop[1] == 'constant':
@@ -253,6 +286,10 @@ class Window(QWidget):
                 layer_filter.append(prop[2][0])
             elif prop[1] == 'file':
                 layer_filter.append('images/fog.png')
+            elif prop[1] == 'dir':
+                layer_filter.append('images/')
+            elif prop[1] == 'device':
+                layer_filter.append('/dev/video0')
             else:
                 layer_filter.append(None)
 
@@ -262,7 +299,6 @@ class Window(QWidget):
         while len(layer_filter) <= index:
             layer_filter.append(None)
         layer_filter[index] = new_value
-        # DEBUG
         self.activate_changes()
     
     def activate_changes(self):
@@ -270,7 +306,6 @@ class Window(QWidget):
         virtual_webcam.layers = virtual_webcam.reload_layers(virtual_webcam.config)
 
 class ProcessThread(QThread):
-
     def run(self):
         while True:
             virtual_webcam.mainloop()
@@ -279,7 +314,7 @@ def main():
     app = QApplication(sys.argv)
     window = Window()
     
-    # Spin up thread
+    # Spin up processing thread
     thread = ProcessThread()
     thread.finished.connect(app.exit)
     thread.start()

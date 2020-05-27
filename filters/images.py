@@ -101,12 +101,12 @@ class ImageSequence:
 
 filters.register_filter("image", Image,
                         [
-                            ["Image Path", "file"],
+                            ["Image Path", "file", "Image files (*.jpg *.gif *.png)"],
                             ["Interpolation Method", "enum", ["LINEAR", "NEAREST"]]
                         ])
 filters.register_filter("image_sequence", ImageSequence,
                         [
-                            ["Image Path", "file"],
+                            ["Images Path", "dir"],
                             ["FPS", "numeric", 1, 144],
                             ["Interpolation Method", "enum", ["LINEAR", "NEAREST"]]
                         ])

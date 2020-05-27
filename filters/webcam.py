@@ -19,4 +19,7 @@ class Webcam:
         return np.array(frame)
 
 
-filters.register_filter("webcam", Webcam)
+filters.register_filter("webcam", Webcam,
+                        [
+                            ["Device", "device"]
+                        ])

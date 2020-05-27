@@ -24,5 +24,5 @@ filters.register_filter("stripes", Stripes,
                         [
                             ["width", "numeric", 1, 100],
                             ["intensity", "numeric", 1, 255],
-                            ["speed", "numeric", -20, 20]
+                            ["speed", "numeric", -20, 20, 1, 0]
                         ])

@@ -128,5 +128,15 @@ filters.register_filter("zoom", Zoom,
                             ["Vertical", "double", 0.1, 3.0, 0.1],
                             ["Pad and Crop", "constant", True]
                         ])
-filters.register_filter("move", Move)
-filters.register_filter("affine", Affine)
+filters.register_filter("move", Move,
+                        [
+                            ["Horizontal", "double", 0.0, 1.0, 0.05],
+                            ["Vertical", "double", 0.0, 1.0, 0.05],
+                            ["Relative", "boolean"],
+                            ["Periodic", "boolean"]
+                        ])
+filters.register_filter("affine", Affine,
+                        [
+                            ["Matrix", "constant", [[1,0],[0,1]]],
+                            ["Offset", "constant", [0,0]]
+                        ])

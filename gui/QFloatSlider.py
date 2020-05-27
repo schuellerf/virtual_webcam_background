@@ -21,6 +21,9 @@ class QFloatSlider(QSlider):
     def setMaximum(self, value):
         super().setMaximum(int(value * self.scaler))
 
+    def setSingleStep(self, value):
+        super().setSingleStep(int(value * self.scaler))
+
     def minimum(self):
         return float(super().minimum / self.scaler)
 

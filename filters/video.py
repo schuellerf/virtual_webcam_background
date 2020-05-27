@@ -122,4 +122,9 @@ class Video:
         return frame
 
 
-filters.register_filter("video", Video)
+filters.register_filter("video", Video,
+                        [
+                            ["Video path", "file", "Video files (*.mp4 *.mkv *.mov)"],
+                            ["Target FPS", "numeric", 1, 144],
+                            ["Interpolation Method", "enum", ["LINEAR", "NEAREST"]],
+                        ])

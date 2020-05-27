@@ -46,5 +46,16 @@ class ChromaKey:
         return frame
 
 
-filters.register_filter("change_alpha", ChangeAlpha)
-filters.register_filter("chroma_key", ChromaKey)
+filters.register_filter("change_alpha", ChangeAlpha,
+                        [
+                            ["Alpha Change", "numeric", -255, 255, 1, 0],
+                            ["Alpha Min", "numeric", 0, 255],
+                            ["Alpha Max", "numeric", 0, 255, 1, 255]
+                        ])
+filters.register_filter("chroma_key", ChromaKey,
+                        [
+                            ["R", "double", 0.0, 255.0, 1.0, 0.0],
+                            ["G", "double", 0.0, 255.0, 1.0, 255.0],
+                            ["B", "double", 0.0, 255.0, 1.0, 0.0],
+                            ["Fuzz", "double", 0.0, 255.0, 1.0, 10.0],
+                        ])
