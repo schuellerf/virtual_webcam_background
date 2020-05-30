@@ -3,6 +3,13 @@ import numpy as np
 
 
 class Roll:
+    @classmethod
+    def config(cls):
+        return {
+            "Horizontal Speed": {"type": "numeric", "range": [-200, 200], "input": True, "default": 0},
+            "Vertical Speed": {"type": "numeric", "range": [-200, 200], "input": True, "default": 0}
+        }
+
     def __init__(self, speed_x, speed_y, *args, **kwargs):
         self.position_x = 0
         self.position_y = 0
@@ -18,8 +25,4 @@ class Roll:
                        axis=(1, 0))
 
 
-filters.register_filter("roll", Roll,
-                        [
-                            ["speed_x", "numeric", -100, 100, 1, 0],
-                            ["speed_y", "numeric", -100, 100, 1, 0]
-                        ])
+filters.register_filter("roll", Roll)

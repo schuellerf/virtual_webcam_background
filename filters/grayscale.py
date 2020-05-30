@@ -4,6 +4,10 @@ import filters
 
 
 class Grayscale:
+    @classmethod
+    def config(cls):
+        return {}
+
     def __init__(self, *args, **kwargs):
         pass
 

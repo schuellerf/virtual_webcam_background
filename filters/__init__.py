@@ -1,19 +1,12 @@
 filters = {}
 
 
-def register_filter(name, filter, properties = []):
+def register_filter(name, filter):
     global filters
-    filters[name] = {
-        "filter": filter,
-        "properties": properties
-    }
-
+    filters[name] = filter
 
 def get_filter(name):
-    return filters.get(name, {"filter": None})['filter']
-
-def get_filter_properties(name):
-    return filters.get(name, {"properties": []})['properties']
+    return filters.get(name, None)
 
 def get_filters(config, filter_list):
     image_filters = []

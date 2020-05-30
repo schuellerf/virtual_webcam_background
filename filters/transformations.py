@@ -5,6 +5,13 @@ from scipy import ndimage
 
 
 class Flip:
+    @classmethod
+    def config(cls):
+        return {
+            "Horizontal": {"type": "boolean", "default": True},
+            "Vertical": {"type": "boolean", "default": False},
+        }
+
     def __init__(self, horizontal=True, vertical=False, *args, **kwargs):
         self.horizontal = horizontal
         self.vertical = vertical
@@ -18,6 +25,14 @@ class Flip:
         return frame
 
 class Zoom:
+    @classmethod
+    def config(cls):
+        return {
+            "Horizontal": {"type": "double", "range": [0.1, 10], "step_size": 0.1, "input": True, "default": 1.0},
+            "Vertical": {"type": "double", "range": [0.1, 10], "step_size": 0.1, "input": True, "default": 1.0},
+            "Pad and Crop": {"type": "constant", "value": True}
+        }
+
     def __init__(self, horizontal, vertical=None, pad_and_crop=True,
                  *args, **kwargs):
         self.horizontal = horizontal
@@ -54,6 +69,15 @@ class Zoom:
 
 
 class Move:
+    @classmethod
+    def config(cls):
+        return {
+            "Horizontal": {"type": "double", "range": [-1024, 1024], "step_size": 0.1, "input": True, "default": 0.0},
+            "Vertical": {"type": "double", "range": [-1024, 1024], "step_size": 0.1, "input": True, "default": 0.0},
+            "Relative": {"type": "boolean", "default": True},
+            "Periodic": {"type": "boolean", "default": False},
+        }
+
     def __init__(self, horizontal, vertical, relative=False, periodic=True,
                  *args, **kwargs):
 
@@ -83,6 +107,13 @@ class Move:
 
 
 class Affine:
+    @classmethod
+    def config(cls):
+        return {
+            "Matrix": {"type": "constant", "value": [[1,0],[0,1]]},
+            "Offset": {"type": "constant", "value": [0,0]}
+        }
+
     def __init__(self, matrix=[[1,0],[0,1]], offset=[0,0], relative=False,
                  *args, **kwargs):
 
@@ -117,26 +148,7 @@ class Affine:
         return frame
 
 
-filters.register_filter("flip", Flip,
-                        [
-                            ["Horizontal", "boolean"],
-                            ["Vertical", "boolean"]
-                        ])
-filters.register_filter("zoom", Zoom,
-                        [
-                            ["Horizontal", "double", 0.1, 3.0, 0.1],
-                            ["Vertical", "double", 0.1, 3.0, 0.1],
-                            ["Pad and Crop", "constant", True]
-                        ])
-filters.register_filter("move", Move,
-                        [
-                            ["Horizontal", "double", 0.0, 1.0, 0.05],
-                            ["Vertical", "double", 0.0, 1.0, 0.05],
-                            ["Relative", "boolean"],
-                            ["Periodic", "boolean"]
-                        ])
-filters.register_filter("affine", Affine,
-                        [
-                            ["Matrix", "constant", [[1,0],[0,1]]],
-                            ["Offset", "constant", [0,0]]
-                        ])
+filters.register_filter("flip", Flip)
+filters.register_filter("zoom", Zoom)
+filters.register_filter("move", Move)
+filters.register_filter("affine", Affine)

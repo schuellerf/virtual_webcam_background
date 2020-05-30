@@ -3,6 +3,14 @@ import numpy as np
 
 
 class ChangeAlpha:
+    @classmethod
+    def config(cls):
+        return {
+            "Alpha Change": {"type": "numeric", "range": [-255, 255], "default": 0},
+            "Alpha Min": {"type": "numeric", "range": [-255, 255], "default": 0},
+            "Alpha Max": {"type": "numeric", "range": [-255, 255], "default": 255},
+        }
+
     def __init__(self,
                  alpha_change=0,
                  alpha_min=0,
@@ -27,6 +35,15 @@ class ChangeAlpha:
 
 
 class ChromaKey:
+    @classmethod
+    def config(cls):
+        return {
+            "R": {"type": "double", "range": [0.0, 255.0]},
+            "G": {"type": "double", "range": [0.0, 255.0], "default": 255.0},
+            "B": {"type": "double", "range": [0.0, 255.0]},
+            "Fuzz": {"type": "double", "range": [0.0, 255.0], "input": True, "default": 10.0},
+        }
+
     def __init__(self, r=0.0, g=255.0, b=0.0, fuzz=10.0, *args, **kwargs):
         self.rgb_from = np.clip(
                 np.array([r - fuzz, g - fuzz, b - fuzz]), 0, 255)
@@ -46,16 +63,5 @@ class ChromaKey:
         return frame
 
 
-filters.register_filter("change_alpha", ChangeAlpha,
-                        [
-                            ["Alpha Change", "numeric", -255, 255, 1, 0],
-                            ["Alpha Min", "numeric", 0, 255],
-                            ["Alpha Max", "numeric", 0, 255, 1, 255]
-                        ])
-filters.register_filter("chroma_key", ChromaKey,
-                        [
-                            ["R", "double", 0.0, 255.0, 1.0, 0.0],
-                            ["G", "double", 0.0, 255.0, 1.0, 255.0],
-                            ["B", "double", 0.0, 255.0, 1.0, 0.0],
-                            ["Fuzz", "double", 0.0, 255.0, 1.0, 10.0],
-                        ])
+filters.register_filter("change_alpha", ChangeAlpha)
+filters.register_filter("chroma_key", ChromaKey)

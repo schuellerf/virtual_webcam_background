@@ -57,6 +57,14 @@ def lazy_load_video(video_path, width, height,
 
 
 class Video:
+    @classmethod
+    def config(cls):
+        return {
+            "Video path": {"type": "file", "file_types": "Video files (*.mp4 *.mkv *.mov)"},
+            "Target FPS": {"type": "numeric", "range": [1, 144], "input": True, "default": 24},
+            "Interpolation Method": {"type": "enum", "options": ["LINEAR", "NEAREST"]}
+        }
+
     def __init__(self, video_path, target_fps=10, interpolation_method="LINEAR",
                  lazy=True, *args, **kwargs):
         config = kwargs['config']
@@ -122,9 +130,4 @@ class Video:
         return frame
 
 
-filters.register_filter("video", Video,
-                        [
-                            ["Video path", "file", "Video files (*.mp4 *.mkv *.mov)"],
-                            ["Target FPS", "numeric", 1, 144],
-                            ["Interpolation Method", "enum", ["LINEAR", "NEAREST"]],
-                        ])
+filters.register_filter("video", Video)

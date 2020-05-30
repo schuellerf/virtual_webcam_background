@@ -4,6 +4,10 @@ import numpy as np
 
 
 class Noise:
+    @classmethod
+    def config(cls):
+        return {}
+
     def __init__(self, *args, **kwargs):
         pass
 

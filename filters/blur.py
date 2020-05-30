@@ -3,6 +3,13 @@ import filters
 
 
 class Blur:
+    @classmethod
+    def config(cls):
+        return {
+            "intensity_x": {"type": "numeric", "range": [0, 100], "default": 5},
+            "intensity_y": {"type": "numeric", "range": [0, 100], "default": 5}
+        }
+
     def __init__(self, intensity_x=5, intensity_y=-1, *args, **kwargs):
         self.intensity_x = intensity_x
         if intensity_y > 0:
@@ -20,8 +27,4 @@ class Blur:
         return frame
 
 
-filters.register_filter("blur", Blur,
-                        [
-                            ["intensity_x", "numeric", 0, 100],
-                            ["intensity_y", "numeric", 0, 100]
-                        ])
+filters.register_filter("blur", Blur)

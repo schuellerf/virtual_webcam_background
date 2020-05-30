@@ -3,6 +3,14 @@ import numpy as np
 
 
 class Stripes:
+    @classmethod
+    def config(cls):
+        return {
+            "Width": {"type": "numeric", "range": [1, 1024], "input": True, "default": 2},
+            "Intensity": {"type": "numeric", "range": [0, 255], "default": 10},
+            "Speed": {"type": "numeric", "range": [-200, 200], "default": 0}
+        }
+
     def __init__(self, width=5, intensity=10.0, speed=1, *args, **kwargs):
         self.width = width
         self.intensity = intensity
@@ -20,9 +28,4 @@ class Stripes:
         return np.clip(frame, 0.0, 255.0)
 
 
-filters.register_filter("stripes", Stripes,
-                        [
-                            ["width", "numeric", 1, 100],
-                            ["intensity", "numeric", 1, 255],
-                            ["speed", "numeric", -20, 20, 1, 0]
-                        ])
+filters.register_filter("stripes", Stripes)

@@ -3,6 +3,13 @@ import filters
 
 
 class GaussianBlur:
+    @classmethod
+    def config(cls):
+        return {
+            "intensity_x": {"type": "numeric", "range": [0, 100], "default": 5},
+            "intensity_y": {"type": "numeric", "range": [0, 100], "default": 5}
+        }
+
     def __init__(self, intensity_x=5, intensity_y=-1, *args, **kwargs):
         if intensity_y < 0:
             intensity_y = intensity_x
@@ -24,8 +31,4 @@ class GaussianBlur:
         return frame
 
 
-filters.register_filter("gaussian_blur", GaussianBlur,
-                        [
-                            ["intensity_x", "numeric", 0, 100],
-                            ["intensity_y", "numeric", 0, 100]
-                        ])
+filters.register_filter("gaussian_blur", GaussianBlur)

@@ -4,6 +4,11 @@ import numpy as np
 
 
 class Webcam:
+    @classmethod
+    def config(cls):
+        return {
+            "Device": {"type": "device"}
+        }
     def __init__(self, device, *args, **kwargs):
         config = kwargs['config']
         self.cap = cv2.VideoCapture(device)
@@ -19,7 +24,4 @@ class Webcam:
         return np.array(frame)
 
 
-filters.register_filter("webcam", Webcam,
-                        [
-                            ["Device", "device"]
-                        ])
+filters.register_filter("webcam", Webcam)

@@ -4,6 +4,14 @@ import numpy as np
 
 
 class SolidColor:
+    @classmethod
+    def config(cls):
+        return {
+            "R": {"type": "numeric", "range": [0, 255], "default": 255},
+            "G": {"type": "numeric", "range": [0, 255], "default": 255},
+            "B": {"type": "numeric", "range": [0, 255], "default": 255}
+        }
+
     def __init__(self, r=0.0, g=0.0, b=0.0, *args, **kwargs):
         self.rgb = np.array([r, g, b])
         self.rgba = np.array([r, g, b, 255.0])
@@ -18,6 +26,14 @@ class SolidColor:
 
 
 class Colorize:
+    @classmethod
+    def config(cls):
+        return {
+            "R": {"type": "numeric", "range": [0, 255], "default": 255},
+            "G": {"type": "numeric", "range": [0, 255], "default": 255},
+            "B": {"type": "numeric", "range": [0, 255], "default": 255}
+        }
+
     def __init__(self, r=255.0, g=255.0, b=255.0, *args, **kwargs):
         self.color_filter = ColorFilter(r, g, b)
 
@@ -31,6 +47,14 @@ class Colorize:
 
 
 class ColorFilter:
+    @classmethod
+    def config(cls):
+        return {
+            "R": {"type": "numeric", "range": [0, 255], "default": 255},
+            "G": {"type": "numeric", "range": [0, 255], "default": 255},
+            "B": {"type": "numeric", "range": [0, 255], "default": 255}
+        }
+
     def __init__(self, r=255.0, g=255.0, b=255.0, *args, **kwargs):
         self.r = r
         self.g = g
@@ -44,22 +68,6 @@ class ColorFilter:
         frame = np.clip(frame, 0.0, 255.0)
         return frame
 
-
-filters.register_filter("solid_color", SolidColor,
-                        [
-                            ["R", "numeric", 0, 255],
-                            ["G", "numeric", 0, 255],
-                            ["B", "numeric", 0, 255]
-                        ])
-filters.register_filter("colorize", Colorize,
-                        [
-                            ["R", "numeric", 0, 255],
-                            ["G", "numeric", 0, 255],
-                            ["B", "numeric", 0, 255]
-                        ])
-filters.register_filter("color_filter", ColorFilter,
-                        [
-                            ["R", "numeric", 0, 255],
-                            ["G", "numeric", 0, 255],
-                            ["B", "numeric", 0, 255]
-                        ])
+filters.register_filter("solid_color", SolidColor)
+filters.register_filter("colorize", Colorize)
+filters.register_filter("color_filter", ColorFilter)

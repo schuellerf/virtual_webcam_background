@@ -39,6 +39,13 @@ def reload_images(images_path, mtime, width, height, interpolation_method):
 
 
 class Image:
+    @classmethod
+    def config(cls):
+        return {
+            "Image Path": {"type": "file", "file_types": "Image files (*.jpg *.gif *.png)"},
+            "Interpolation Method": {"type": "enum", "options": ["LINEAR", "NEAREST"]}
+        }
+
     def __init__(self, image_path, interpolation_method="LINEAR",
                  *args, **kwargs):
         config = kwargs['config']
@@ -66,6 +73,14 @@ class Image:
 
 
 class ImageSequence:
+    @classmethod
+    def config(cls):
+        return {
+            "Image Path": {"type": "file", "file_types": "Image files (*.jpg *.gif *.png)"},
+            "FPS": {"type": "numeric", "range": [1, 144], "input": True, "default": 24},
+            "Interpolation Method": {"type": "enum", "options": ["LINEAR", "NEAREST"]}
+        }
+
     def __init__(self, images_path, fps=10, interpolation_method="LINEAR",
                  *args, **kwargs):
         config = kwargs['config']
@@ -99,14 +114,5 @@ class ImageSequence:
         return frame
 
 
-filters.register_filter("image", Image,
-                        [
-                            ["Image Path", "file", "Image files (*.jpg *.gif *.png)"],
-                            ["Interpolation Method", "enum", ["LINEAR", "NEAREST"]]
-                        ])
-filters.register_filter("image_sequence", ImageSequence,
-                        [
-                            ["Images Path", "dir"],
-                            ["FPS", "numeric", 1, 144],
-                            ["Interpolation Method", "enum", ["LINEAR", "NEAREST"]]
-                        ])
+filters.register_filter("image", Image)
+filters.register_filter("image_sequence", ImageSequence)
