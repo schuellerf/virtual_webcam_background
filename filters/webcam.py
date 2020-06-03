@@ -9,6 +9,7 @@ class Webcam:
         return {
             "Device": {"type": "device"}
         }
+
     def __init__(self, device, *args, **kwargs):
         config = kwargs['config']
         self.cap = cv2.VideoCapture(device)

@@ -76,7 +76,7 @@ class ImageSequence:
     @classmethod
     def config(cls):
         return {
-            "Image Path": {"type": "file", "file_types": "Image files (*.jpg *.gif *.png)"},
+            "Images Path": {"type": "dir"},
             "FPS": {"type": "numeric", "range": [1, 144], "input": True, "default": 24},
             "Interpolation Method": {"type": "enum", "options": ["LINEAR", "NEAREST"]}
         }

@@ -5,6 +5,15 @@ from scipy import ndimage
 
 
 class Anonymize:
+    @classmethod
+    def config(cls):
+        return {
+            "Blur": {"type": "numeric", "range": [0, 100], "default": 20},
+            "Padding": {"type": "numeric", "range": [0, 100], "default": 20},
+            "Secure": {"type": "boolean", "default": False},
+            "Eyes only": {"type": "boolean", "default": False},
+        }
+
     def __init__(self, blur=20, padding=10, secure=False, eyes_only=False,
             *args, **kwargs):
         self.padding = padding
