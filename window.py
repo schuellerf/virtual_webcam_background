@@ -100,7 +100,7 @@ class Window(QWidget):
 
     def save_config(self):
         with open('config.yaml', 'w') as config_file:
-            yaml.dump(virtual_webcam.config, config_file)
+            yaml.dump(vw.config, config_file)
 
     def toggle_play(self):
         if self.processing_thread.paused:
