@@ -7,7 +7,7 @@ class Webcam:
     @classmethod
     def config(cls):
         return {
-            "Device": {"type": "device"}
+            "Device": {"type": "file", "default": "images/fog.png"}
         }
 
     def __init__(self, device, *args, **kwargs):

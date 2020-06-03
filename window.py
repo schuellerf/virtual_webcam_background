@@ -175,7 +175,7 @@ class Window(QWidget):
                     file_label = QLabel("File: %s" % layer_filter[i + 1])
                     self.properties_layout.addWidget(file_label)
                     file_selection_btn = QPushButton("Select file")
-                    file_selection_btn.clicked.connect(lambda i=i,types=prop['file_types']: self.select_file_property(types, data, i + 1, file_label))
+                    file_selection_btn.clicked.connect(lambda i=i,types=prop.get('file_types', None): self.select_file_property(types, data, i + 1, file_label))
                     self.properties_layout.addWidget(file_selection_btn)
                 elif prop['type'] == 'dir':
                     dir_label = QLabel("Dir: %s" % layer_filter[i + 1])
@@ -183,14 +183,6 @@ class Window(QWidget):
                     dir_selection_btn = QPushButton("Select directory")
                     dir_selection_btn.clicked.connect(lambda i=i: self.select_dir_property(data, i + 1, dir_label))
                     self.properties_layout.addWidget(dir_selection_btn)
-                elif prop['type'] == 'device':
-                    dropdown = QComboBox()
-                    cameras = glob.glob("/dev/video*")
-                    dropdown.addItems(cameras)
-                    if len(layer_filter) > i + 1:
-                        dropdown.setCurrentIndex(cameras.index(layer_filter[i+ 1]))
-                    dropdown.currentIndexChanged.connect(lambda value,i=i: self.update_filter_prop(layer_filter, i + 1, self.sender().itemText(value)))
-                    self.properties_layout.addWidget(dropdown)
                 elif prop['type'] == 'constant':
                     label = QLabel("Constant: %s" % prop['value'])
                     self.properties_layout.addWidget(label)
@@ -324,8 +316,6 @@ class Window(QWidget):
                 layer_filter.append('images/fog.png')
             elif prop['type'] == 'dir':
                 layer_filter.append('images/')
-            elif prop['type'] == 'device':
-                layer_filter.append('/dev/video0')
             else:
                 layer_filter.append(None)
 
