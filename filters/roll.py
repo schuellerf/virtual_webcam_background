@@ -6,8 +6,8 @@ class Roll:
     @classmethod
     def config(cls):
         return {
-            "Horizontal Speed": {"type": "numeric", "range": [-200, 200], "input": True, "default": 0},
-            "Vertical Speed": {"type": "numeric", "range": [-200, 200], "input": True, "default": 0}
+            "Horizontal Speed": {"type": "integer", "range": [-200, 200], "input": True, "default": 0},
+            "Vertical Speed": {"type": "integer", "range": [-200, 200], "input": True, "default": 0}
         }
 
     def __init__(self, speed_x, speed_y, *args, **kwargs):

@@ -137,13 +137,13 @@ class Window(QWidget):
             config = filters.get_filter(filter_type).config()
             for (i, (prop_name, prop)) in enumerate(config.items()):
                 self.properties_layout.addWidget(QLabel(prop_name))
-                if prop['type'] in ['numeric', 'double']:
+                if prop['type'] in ['integer', 'float']:
                     if prop.get('input', False):
-                        if prop['type'] == 'numeric':
+                        if prop['type'] == 'integer':
                             slider = QSpinBox()
                         else:
                             slider = QDoubleSpinBox()
-                    elif prop['type'] == 'numeric':
+                    elif prop['type'] == 'integer':
                         slider = QSlider(Qt.Horizontal)
                         slider.setTickInterval(10)
                         slider.setTickPosition(QSlider.TicksBelow)
@@ -304,7 +304,7 @@ class Window(QWidget):
         for (prop_name, prop) in config.items():
             if 'default' in prop:
                 layer_filter.append(prop['default'])
-            elif prop['type'] in ['numeric', 'double']:
+            elif prop['type'] in ['integer', 'float']:
                 layer_filter.append(prop['range'][0])
             elif prop['type'] == 'boolean':
                 layer_filter.append(False)

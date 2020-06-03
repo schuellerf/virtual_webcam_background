@@ -61,7 +61,7 @@ class Video:
     def config(cls):
         return {
             "Video path": {"type": "file", "file_types": "Video files (*.mp4 *.mkv *.mov)"},
-            "Target FPS": {"type": "numeric", "range": [1, 144], "input": True, "default": 24},
+            "Target FPS": {"type": "integer", "range": [1, 144], "input": True, "default": 24},
             "Interpolation Method": {"type": "enum", "options": ["LINEAR", "NEAREST"]}
         }
 

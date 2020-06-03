@@ -28,8 +28,8 @@ class Zoom:
     @classmethod
     def config(cls):
         return {
-            "Horizontal": {"type": "double", "range": [0.1, 10], "step_size": 0.1, "input": True, "default": 1.0},
-            "Vertical": {"type": "double", "range": [0.1, 10], "step_size": 0.1, "input": True, "default": 1.0},
+            "Horizontal": {"type": "float", "range": [0.1, 10], "step_size": 0.1, "input": True, "default": 1.0},
+            "Vertical": {"type": "float", "range": [0.1, 10], "step_size": 0.1, "input": True, "default": 1.0},
             "Pad and Crop": {"type": "constant", "value": True}
         }
 
@@ -72,8 +72,8 @@ class Move:
     @classmethod
     def config(cls):
         return {
-            "Horizontal": {"type": "double", "range": [-1024, 1024], "step_size": 0.1, "input": True, "default": 0.0},
-            "Vertical": {"type": "double", "range": [-1024, 1024], "step_size": 0.1, "input": True, "default": 0.0},
+            "Horizontal": {"type": "float", "range": [-1024, 1024], "step_size": 0.1, "input": True, "default": 0.0},
+            "Vertical": {"type": "float", "range": [-1024, 1024], "step_size": 0.1, "input": True, "default": 0.0},
             "Relative": {"type": "boolean", "default": True},
             "Periodic": {"type": "boolean", "default": False},
         }

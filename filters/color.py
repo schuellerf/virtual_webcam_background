@@ -7,9 +7,9 @@ class SolidColor:
     @classmethod
     def config(cls):
         return {
-            "R": {"type": "numeric", "range": [0, 255], "default": 255},
-            "G": {"type": "numeric", "range": [0, 255], "default": 255},
-            "B": {"type": "numeric", "range": [0, 255], "default": 255}
+            "R": {"type": "integer", "range": [0, 255], "default": 255},
+            "G": {"type": "integer", "range": [0, 255], "default": 255},
+            "B": {"type": "integer", "range": [0, 255], "default": 255}
         }
 
     def __init__(self, r=0.0, g=0.0, b=0.0, *args, **kwargs):
@@ -29,9 +29,9 @@ class Colorize:
     @classmethod
     def config(cls):
         return {
-            "R": {"type": "numeric", "range": [0, 255], "default": 255},
-            "G": {"type": "numeric", "range": [0, 255], "default": 255},
-            "B": {"type": "numeric", "range": [0, 255], "default": 255}
+            "R": {"type": "integer", "range": [0, 255], "default": 255},
+            "G": {"type": "integer", "range": [0, 255], "default": 255},
+            "B": {"type": "integer", "range": [0, 255], "default": 255}
         }
 
     def __init__(self, r=255.0, g=255.0, b=255.0, *args, **kwargs):
@@ -50,9 +50,9 @@ class ColorFilter:
     @classmethod
     def config(cls):
         return {
-            "R": {"type": "numeric", "range": [0, 255], "default": 255},
-            "G": {"type": "numeric", "range": [0, 255], "default": 255},
-            "B": {"type": "numeric", "range": [0, 255], "default": 255}
+            "R": {"type": "integer", "range": [0, 255], "default": 255},
+            "G": {"type": "integer", "range": [0, 255], "default": 255},
+            "B": {"type": "integer", "range": [0, 255], "default": 255}
         }
 
     def __init__(self, r=255.0, g=255.0, b=255.0, *args, **kwargs):

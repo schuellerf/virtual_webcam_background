@@ -6,8 +6,8 @@ class Blur:
     @classmethod
     def config(cls):
         return {
-            "intensity_x": {"type": "numeric", "range": [0, 100], "default": 5},
-            "intensity_y": {"type": "numeric", "range": [0, 100], "default": 5}
+            "intensity_x": {"type": "integer", "range": [0, 100], "default": 5},
+            "intensity_y": {"type": "integer", "range": [0, 100], "default": 5}
         }
 
     def __init__(self, intensity_x=5, intensity_y=-1, *args, **kwargs):

@@ -77,7 +77,7 @@ class ImageSequence:
     def config(cls):
         return {
             "Images Path": {"type": "dir"},
-            "FPS": {"type": "numeric", "range": [1, 144], "input": True, "default": 24},
+            "FPS": {"type": "integer", "range": [1, 144], "input": True, "default": 24},
             "Interpolation Method": {"type": "enum", "options": ["LINEAR", "NEAREST"]}
         }
 

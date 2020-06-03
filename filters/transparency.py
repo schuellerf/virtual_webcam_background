@@ -6,9 +6,9 @@ class ChangeAlpha:
     @classmethod
     def config(cls):
         return {
-            "Alpha Change": {"type": "numeric", "range": [-255, 255], "default": 0},
-            "Alpha Min": {"type": "numeric", "range": [-255, 255], "default": 0},
-            "Alpha Max": {"type": "numeric", "range": [-255, 255], "default": 255},
+            "Alpha Change": {"type": "integer", "range": [-255, 255], "default": 0},
+            "Alpha Min": {"type": "integer", "range": [-255, 255], "default": 0},
+            "Alpha Max": {"type": "integer", "range": [-255, 255], "default": 255},
         }
 
     def __init__(self,
@@ -38,10 +38,10 @@ class ChromaKey:
     @classmethod
     def config(cls):
         return {
-            "R": {"type": "double", "range": [0.0, 255.0]},
-            "G": {"type": "double", "range": [0.0, 255.0], "default": 255.0},
-            "B": {"type": "double", "range": [0.0, 255.0]},
-            "Fuzz": {"type": "double", "range": [0.0, 255.0], "input": True, "default": 10.0},
+            "R": {"type": "float", "range": [0.0, 255.0]},
+            "G": {"type": "float", "range": [0.0, 255.0], "default": 255.0},
+            "B": {"type": "float", "range": [0.0, 255.0]},
+            "Fuzz": {"type": "float", "range": [0.0, 255.0], "input": True, "default": 10.0},
         }
 
     def __init__(self, r=0.0, g=255.0, b=0.0, fuzz=10.0, *args, **kwargs):

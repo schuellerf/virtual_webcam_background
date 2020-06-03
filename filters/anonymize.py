@@ -8,8 +8,8 @@ class Anonymize:
     @classmethod
     def config(cls):
         return {
-            "Blur": {"type": "numeric", "range": [0, 100], "default": 20},
-            "Padding": {"type": "numeric", "range": [0, 100], "default": 20},
+            "Blur": {"type": "integer", "range": [0, 100], "default": 20},
+            "Padding": {"type": "integer", "range": [0, 100], "default": 20},
             "Secure": {"type": "boolean", "default": False},
             "Eyes only": {"type": "boolean", "default": False},
         }
