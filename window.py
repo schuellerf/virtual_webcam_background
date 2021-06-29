@@ -12,6 +12,7 @@ from gui.QFloatSlider import QFloatSlider
 
 import virtual_webcam as vw
 import filters
+import functools
 
 
 class Window(QWidget):
@@ -33,13 +34,14 @@ class Window(QWidget):
         self.tree.selectionModel().selectionChanged.connect(self.item_click)
         
         # Tree actions
-        add_layer_btn = QPushButton("Add Layer")
+        add_layer_btn = QPushButton(self.tr("Add Layer"))
         add_layer_btn.clicked.connect(self.add_layer)
-        add_filter_btn = QPushButton("Add Filter")
+        add_filter_btn = QPushButton(self.tr("Add Filter"))
         add_filter_btn.clicked.connect(self.add_filter)
-        remove_btn = QPushButton("Remove")
+        remove_btn = QPushButton(self.tr(f"Remove"))
         remove_btn.clicked.connect(self.remove_selection)
         play_btn = QPushButton("⏸︎")
+        play_btn.setToolTip(self.tr("Pause virtual webcam processing"))
         play_btn.clicked.connect(self.toggle_play)
 
         tree_action_layout = QHBoxLayout()
@@ -61,11 +63,11 @@ class Window(QWidget):
         self.rebuild_tree()
         
         # Action buttons
-        load_btn = QPushButton("Reload config")
+        load_btn = QPushButton(self.tr("Reload config"))
         load_btn.clicked.connect(self.reload_config)
-        save_btn = QPushButton("Save config")
+        save_btn = QPushButton(self.tr("Save config"))
         save_btn.clicked.connect(self.save_config)
-        quit_btn = QPushButton("Quit")
+        quit_btn = QPushButton(self.tr("Quit"))
         quit_btn.clicked.connect(QApplication.exit)
         
         # Layout:
@@ -84,7 +86,7 @@ class Window(QWidget):
         layout.addLayout(action_button_layout)
 
         self.setWindowIcon(QIcon("icon.ico"))
-        self.setWindowTitle("Virtual Webcam Background")
+        self.setWindowTitle(self.tr("Virtual Webcam Background"))
 
     def closeEvent(self, event):
         self.hide()
@@ -126,7 +128,7 @@ class Window(QWidget):
         # Determine if it's a layer or filters
         if data[0] == 'filter':
             (_, layer_filters, layer_filter) = data
-            self.properties_layout.addWidget(QLabel("Filter type"))
+            self.properties_layout.addWidget(QLabel(self.tr("Filter type")))
             filter_type = layer_filter[0]
             
             types = QComboBox()
@@ -175,28 +177,28 @@ class Window(QWidget):
                     dropdown.currentIndexChanged.connect(lambda value,i=i: self.update_filter_prop(layer_filter, i + 1, self.sender().itemText(value)))
                     self.properties_layout.addWidget(dropdown)
                 elif prop['type'] == 'file':
-                    file_label = QLabel("File: %s" % layer_filter[i + 1])
+                    file_label = QLabel(self.tr("File: %s") % layer_filter[i + 1])
                     self.properties_layout.addWidget(file_label)
-                    file_selection_btn = QPushButton("Select file")
+                    file_selection_btn = QPushButton(self.tr("Select file"))
                     file_selection_btn.clicked.connect(lambda i=i,types=prop.get('file_types', None): self.select_file_property(types, data, i + 1, file_label))
                     self.properties_layout.addWidget(file_selection_btn)
                 elif prop['type'] == 'dir':
-                    dir_label = QLabel("Dir: %s" % layer_filter[i + 1])
+                    dir_label = QLabel(self.tr("Dir: %s") % layer_filter[i + 1])
                     self.properties_layout.addWidget(dir_label)
-                    dir_selection_btn = QPushButton("Select directory")
+                    dir_selection_btn = QPushButton(self.tr("Select directory"))
                     dir_selection_btn.clicked.connect(lambda i=i: self.select_dir_property(data, i + 1, dir_label))
                     self.properties_layout.addWidget(dir_selection_btn)
                 elif prop['type'] == 'constant':
-                    label = QLabel("Constant: %s" % prop['value'])
+                    label = QLabel(self.tr("Constant: %s") % prop['value'])
                     self.properties_layout.addWidget(label)
                 else:
-                    label = QLabel("Unsupported type: %s" % prop['type'])
+                    label = QLabel(self.tr("Unsupported type: %s") % prop['type'])
                     self.properties_layout.addWidget(label)
                 
             self.properties_layout.addStretch(1)                
         elif data[0] == 'layer':
             (_, layer) = data
-            self.properties_layout.addWidget(QLabel("Layer type"))
+            self.properties_layout.addWidget(QLabel(self.tr("Layer type")))
             types = QComboBox()
             layer_types = ["input", "foreground", "previous", "empty"];
             types.addItems(layer_types)
@@ -204,36 +206,89 @@ class Window(QWidget):
             types.currentIndexChanged.connect(lambda x: self.update_layer_type(layer, types.itemText(x)))
             self.properties_layout.addWidget(types)
             self.properties_layout.addStretch(1)
+        elif data[0] == 'caption' and data[1] == 'General':
+            self.properties_layout.addWidget(QLabel(self.tr("General settings")))
+            
+            gen_props = [ ("blur", 0, 1000, self.tr("Blur")),
+                          ("dilate", 0, 1000, self.tr("Dilate")),
+                          ("erode", 0, 1000, self.tr("Erode")),
+                          ("average_masks", 0, 100, self.tr("Average Masks"))]
+            for p in gen_props:
+                self.properties_layout.addWidget(QLabel(p[3]))
+                spinbox = QSpinBox()
+                spinbox.setMinimum(p[1])
+                spinbox.setMaximum(p[2])
+                spinbox.setValue(vw.config.get(p[0],0))
+                spinbox.valueChanged.connect(functools.partial(self.update_general_setting,p[0]))
+                self.properties_layout.addWidget(spinbox)
+
+            self.properties_layout.addStretch(1)
+        else:
+            self.properties_layout.addWidget(QLabel(self.tr(f"Config section '{data[1]}'")))
+            self.properties_layout.addStretch(1)
+
+
+    def update_general_setting(self, name, value):
+        item = vw.config[name] = value
+        self.activate_changes()
+
     
     def select_file_property(self, types, data, i, file_label):
         file_name, _ = QFileDialog.getOpenFileName(self, 'Open file', '', types)
         if file_name:
-            file_label.setText("File: %s" % file_name)
+            file_label.setText(self.tr("File: %s") % file_name)
             self.update_filter_prop(data[2], i, file_name)
 
     def select_dir_property(self, data, i, dir_label):
         dir_name = QFileDialog.getExistingDirectory(self, 'Open directory', '',
                                                     QFileDialog.ShowDirsOnly)
         if dir_name:
-            dir_label.setText("Dir: %s" % dir_name)
+            dir_label.setText(self.tr("Dir: %s") % dir_name)
             self.update_filter_prop(data[2], i, dir_name)
 
     def get_selection_index(self):
-        curr_index = self.tree.currentIndex()
-        layer_index = curr_index.parent().row()
-        filter_index = curr_index.row()
-        if layer_index == -1:
-            layer_index = filter_index
-            filter_index = -1
-        return (layer_index, filter_index)
+
+        try:
+            sel = self.model.itemFromIndex(self.tree.currentIndex().parent())
+            data_type, data = sel.data()
+            if data_type == 'layer':
+                return (self.tree.currentIndex().parent().parent().row(),self.tree.currentIndex().parent().row(), self.tree.currentIndex().row())
+        except:
+            pass
+
+        try:
+            sel = self.model.itemFromIndex(self.tree.currentIndex())
+            data_type, data = sel.data()
+            if data_type == 'layer':
+                return (self.tree.currentIndex().parent().row(), self.tree.currentIndex().row(), -1)
+        except:
+            pass
+
+        try:
+            sel = self.model.itemFromIndex(self.tree.currentIndex())
+            data_type, data = sel.data()
+            return (self.tree.currentIndex().row(), -1, -1)
+        except:
+            pass
+
+
+
+        return (-1, -1, -1)
 
     def rebuild_tree(self, index = None):
         if index is None:
             index = self.get_selection_index()
-        layer_index, filter_index = index
+        caption_index, layer_index, filter_index = index
 
         self.model.clear()
-        self.model.setHorizontalHeaderLabels(['Layer'])
+        self.model.setHorizontalHeaderLabels(['Config'])
+
+        general_main = QStandardItem(self.tr("General"))
+        general_main.setData(("caption", "General"))
+        self.model.appendRow([general_main])
+
+        layer_main = QStandardItem(self.tr("Layers"))
+        layer_main.setData(("caption", "Layers"))
         for layer_filters in vw.config.get("layers", []):
             layer_type = list(layer_filters.keys())[0]
             layer_item = QStandardItem(layer_type)
@@ -242,23 +297,28 @@ class Window(QWidget):
                 layer_filter_item = QStandardItem(layer_filter[0])
                 layer_filter_item.setData(("filter", layer_filters, layer_filter))
                 layer_item.appendRow(layer_filter_item)
-            self.model.appendRow([layer_item])
+            layer_main.appendRow([layer_item])
+        self.model.appendRow([layer_main])
         self.tree.expandAll()
 
         # Handle deletions
         if layer_index == -1:
             pass
-        elif self.model.rowCount() <= layer_index:
-            layer_index = self.model.rowCount() - 1
+        elif self.model.rowCount() <= caption_index:
+            caption_index = self.model.rowCount() - 1
+            layer_index = -1
             filter_index = -1
-        elif self.model.rowCount(self.model.item(layer_index).index()) <= filter_index:
-            filter_index = self.model.rowCount(self.model.item(layer_index).index()) - 1
+        elif self.model.rowCount(self.model.item(caption_index).index()) <= layer_index:
+            layer_index = self.model.rowCount(self.model.item(caption_index).index()) - 1
+            filter_index = -1
+        elif self.model.rowCount(self.model.item(caption_index).child(layer_index).index()) <= filter_index:
+            filter_index = self.model.rowCount(self.model.item(caption_index).child(layer_index).index()) - 1
 
         # Reselect
         if filter_index != -1:
-            self.tree.setCurrentIndex(self.model.item(layer_index).child(filter_index).index())
+            self.tree.setCurrentIndex(self.model.item(caption_index).child(layer_index).child(filter_index).index())
         elif layer_index != -1:
-            self.tree.setCurrentIndex(self.model.item(layer_index).index())
+            self.tree.setCurrentIndex(self.model.item(caption_index).child(layer_index).index())
         elif self.model.rowCount() != 0:
             self.tree.setCurrentIndex(self.model.item(0).index())
 
@@ -268,17 +328,22 @@ class Window(QWidget):
         self.activate_changes()
 
     def add_layer(self):
-        layer_index, filter_index = self.get_selection_index()
+        caption_index, layer_index, _ = self.get_selection_index()
+
         vw.config.get("layers", []).insert(layer_index + 1, {"input": []})
-        self.rebuild_tree((layer_index + 1, -1))
+        self.rebuild_tree((caption_index, layer_index + 1, -1))
 
     def add_filter(self):
-        layer_index, filter_index = self.get_selection_index()
+        caption_index, layer_index, filter_index = self.get_selection_index()
         if layer_index == -1:
             return
-        _, data = self.model.item(layer_index).data()
-        data[list(data.keys())[0]].insert(filter_index + 1, ["gaussian_blur", 10, 10])
-        self.rebuild_tree((layer_index, filter_index + 1))
+        try:
+            data_type, data = self.model.item(caption_index).child(layer_index).data()
+            data[list(data.keys())[0]].insert(filter_index + 1, ["gaussian_blur", 10, 10])
+            self.rebuild_tree((caption_index, layer_index, filter_index + 1))
+        except:
+            pass
+
 
     def remove_selection(self):
         curr_index = self.tree.currentIndex()
@@ -288,7 +353,7 @@ class Window(QWidget):
         data = self.model.itemFromIndex(curr_index).data()
         if data[0] == 'filter':
             next(iter(data[1].values())).remove(data[2])
-        else:
+        elif data[0] == 'layer':
             vw.config.get("layers", []).remove(data[1])
         self.rebuild_tree()
 
@@ -376,16 +441,16 @@ def main():
 
     tray_icon = QSystemTrayIcon(QIcon("icon.ico"), app)
     tray_icon_menu = QMenu()
-    config = tray_icon_menu.addAction('Configure')
+    config = tray_icon_menu.addAction(tray_icon.tr('Configure'))
     config.triggered.connect(window.showNormal)
-    quit = tray_icon_menu.addAction('Quit')
+    quit = tray_icon_menu.addAction(tray_icon.tr('Quit'))
     quit.triggered.connect(app.exit)
     tray_icon.setContextMenu(tray_icon_menu)
     tray_icon.activated.connect(lambda: toggle_window(window))
-    tray_icon.setToolTip("Virtual Webcam Background")
+    tray_icon.setToolTip(tray_icon.tr("Virtual Webcam Background"))
     tray_icon.show()
-    tray_icon.showMessage("Virtual Webcam Background running",
-                          "... in the background ;-)")
+    tray_icon.showMessage(tray_icon.tr("Virtual Webcam Background running"),
+                          tray_icon.tr("... in the background ;-)"))
     
     sys.exit(app.exec_())
 
