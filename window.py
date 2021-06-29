@@ -30,7 +30,7 @@ class Window(QWidget):
         self.tree.setModel(self.model)
         self.tree.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tree.setItemsExpandable(False)
-        self.tree.activated.connect(self.item_click)
+        self.tree.selectionModel().selectionChanged.connect(self.item_click)
         
         # Tree actions
         add_layer_btn = QPushButton("Add Layer")
@@ -113,7 +113,8 @@ class Window(QWidget):
             self.sender().setText("⏵︎")
 
     def item_click(self, signal):
-        item = self.model.itemFromIndex(signal)
+        index = signal.indexes()[0]
+        item = self.model.itemFromIndex(index)
         self.construct_properties_layout(item.data())
     
     def construct_properties_layout(self, data):
@@ -383,7 +384,7 @@ def main():
     tray_icon.activated.connect(lambda: toggle_window(window))
     tray_icon.setToolTip("Virtual Webcam Background")
     tray_icon.show()
-    tray_icon.showMessage("Virtual Webcam Bacgkround running",
+    tray_icon.showMessage("Virtual Webcam Background running",
                           "... in the background ;-)")
     
     sys.exit(app.exec_())
